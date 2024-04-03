@@ -52,6 +52,8 @@ SDA        |PB7          |Serial data line
 #include "stdlib.h"
 #include "string.h"
 
+#define hi2c1 hi2c2
+extern I2C_HandleTypeDef hi2c1;
 
 /* I2C address */
 #ifndef SSD1306_I2C_ADDR

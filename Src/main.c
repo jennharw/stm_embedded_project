@@ -25,6 +25,11 @@
 #include "fnd_controller.h"
 #include "ds18b20.h"
 #include "heaterController.h"
+#include "fonts.h"
+#include "ssd1306.h"
+#include "test.h"
+#include "bitmap.h"
+#include "horse_anim.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,6 +118,16 @@ int main(void)
   init_fnd();
   //Ds18b20_Init();
   Ds18b20_Init_Simple();
+  SSD1306_Init();  // initialise
+
+  SSD1306_GotoXY (0,0);
+  SSD1306_Puts ("HELLO", &Font_11x18, 1);
+  SSD1306_GotoXY (10, 30);
+  SSD1306_Puts ("  WORLD :)", &Font_11x18, 1);
+  SSD1306_UpdateScreen(); //display
+
+  HAL_Delay (2000);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -121,13 +136,15 @@ int main(void)
   //int i = 0;
   while (1)
   {
-	  if(!isConverting()){
-	  StartConverting();
-	  }
-	  checkConverting();
-	  if(!isConverting()){
-		  temper = getTemper();
-	  }
+	  HAL_Delay (2000);
+	  //HAL_I2C_Master_Transmit(hi2c, DevAddress, pData, Size, Timeout);
+//	  if(!isConverting()){
+//	  StartConverting();
+//	  }
+//	  checkConverting();
+//	  if(!isConverting()){
+//		  temper = getTemper();
+//	  }
 
 	  //Ds18b20_ManualConvert();
 

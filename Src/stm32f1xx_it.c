@@ -22,6 +22,10 @@
 #include "stm32f1xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "fnd_controller.h"
+
+#include "ds18b20.h"
+#include "heaterController.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
