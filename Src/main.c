@@ -78,7 +78,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  float temper = 0.0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -104,8 +104,11 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim3);
+
   init_fnd();
-  Ds18b20_Init();
+  //Ds18b20_Init();
+  Ds18b20_Init_Simple();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -114,12 +117,20 @@ int main(void)
   //int i = 0;
   while (1)
   {
+	  if(!isConverting()){
+	  StartConverting();
+	  }
+	  checkConverting();
+	  if(!isConverting()){
+		  temper = getTemper();
+	  }
 
-//	  Ds18b20_ManualConvert();
-	  	  for (int i = 0; i <= 9999; i++) {
-	  		  digit4_temper(i, 50);
-	  	  }
-//
+	  //Ds18b20_ManualConvert();
+
+////	  	  for (int i = 0; i <= 9999; i++) {
+////	  		  digit4_temper(i, 50);
+////	  	  }
+//////
 //	  if (getCurrentTemperature() > 28 && getHeaterState() == t_ON){
 //		  heaterControl(t_OFF);
 //	  } else if (getCurrentTemperature() < 26 && getHeaterState() == t_OFF){
