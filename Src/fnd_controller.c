@@ -2,8 +2,10 @@
 
 
 uint8_t _LED_0F[29];
+static SPI_HandleTypeDef * m_hspi;
 
-void init_fnd(){
+
+void init_fnd(SPI_HandleTypeDef * hspi){
  _LED_0F[0] = 0xC0; //0
  _LED_0F[1] = 0xF9; //1
  _LED_0F[2] = 0xA4; //2
@@ -33,23 +35,25 @@ void init_fnd(){
  _LED_0F[26] = 0xC1; //U
  _LED_0F[27] = 0x91; //Y
  _LED_0F[28] = 0xFE; //hight -
+ m_hspi = hspi;
 }
 
 void send(uint8_t X){
-  for (int i = 8; i >= 1; i--)
-  {
-	if (X & 0x80) //1000 0000 10011001 HLLHHLLH
-	{
-	  HAL_GPIO_WritePin(FND_DIO_GPIO_Port, FND_DIO_Pin, HIGH);
-	}
-	else
-	{
-		HAL_GPIO_WritePin(FND_DIO_GPIO_Port, FND_DIO_Pin, LOW);
-	}
-	X <<= 1;
-	HAL_GPIO_WritePin(FND_SCLK_GPIO_Port, FND_SCLK_Pin, LOW);
-	HAL_GPIO_WritePin(FND_SCLK_GPIO_Port, FND_SCLK_Pin, HIGH);
-  }
+//  for (int i = 8; i >= 1; i--)
+//  {
+//	if (X & 0x80) //1000 0000 10011001 HLLHHLLH
+//	{
+//	  HAL_GPIO_WritePin(FND_DIO_GPIO_Port, FND_DIO_Pin, HIGH);
+//	}
+//	else
+//	{
+//		HAL_GPIO_WritePin(FND_DIO_GPIO_Port, FND_DIO_Pin, LOW);
+//	}
+//	X <<= 1;
+//	HAL_GPIO_WritePin(FND_SCLK_GPIO_Port, FND_SCLK_Pin, LOW);
+//	HAL_GPIO_WritePin(FND_SCLK_GPIO_Port, FND_SCLK_Pin, HIGH);
+//  }
+  HAL_SPI_Transmit(m_hspi, &X, 1, 100);
 }
 
 
