@@ -26,8 +26,10 @@
 
 #include "ds18b20.h"
 #include "heaterController.h"
-
+#include "ledController.h"
+#include "buttonController.h"
 #include "ex_var.h"
+#include "defines.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,6 +50,11 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 static uint32_t m_time = 0;
+static uint32_t m_button_before_time = 0;
+static uint32_t m_power_sw_timer =0;
+static uint32_t m_toggle_timer =0;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -230,7 +237,10 @@ void EXTI1_IRQHandler(void)
   /* USER CODE END EXTI1_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(PB1_TEMP_SET_FIX_Pin);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
-  g_f_sw_fix = 1;
+  if((HAL_GetTick() - m_button_before_time) > BUTTON_GAP){
+	g_f_sw_fix = 1;
+  }
+  m_button_before_time = HAL_GetTick();
   /* USER CODE END EXTI1_IRQn 1 */
 }
 
@@ -244,7 +254,10 @@ void EXTI2_IRQHandler(void)
   /* USER CODE END EXTI2_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(PB2_TEMP_SET_DOWN_Pin);
   /* USER CODE BEGIN EXTI2_IRQn 1 */
-  g_f_sw_down = 1;
+  if((HAL_GetTick() - m_button_before_time) > BUTTON_GAP){
+  	g_f_sw_down = 1;
+  }
+  m_button_before_time = HAL_GetTick();
   /* USER CODE END EXTI2_IRQn 1 */
 }
 
@@ -285,25 +298,32 @@ void TIM3_IRQHandler(void)
 //  if (isTemperSensorInit() && !isBusy()) {
 //		digit4_temper((int) (getCurrentTemper() * 10));
 //	}
+	if(m_power_sw_timer > POWER_SW_CHECK_TIME){
+		if(geSWState() == ON_t){
+			led1OnOff(ON_t);
+
+		}else{
+			led1OnOff(OFF_t);
+		}
+		m_power_sw_timer =0;
+	}
+
+	if(m_toggle_timer > TOGGLE_TIME){
+		toggleScreen();
+		m_toggle_timer = 0;
+	}
+
+	m_toggle_timer++;
+	m_power_sw_timer++;
+
+	if (isTemperSensorInit() && !isBusy()) {
+		digit4_temp((int) (getCurrentTemperature() * 10));
+	}
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
 
   /* USER CODE END TIM3_IRQn 1 */
-}
-
-/**
-  * @brief This function handles EXTI line[15:10] interrupts.
-  */
-void EXTI15_10_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
-	g_f_sw_on = 1;
-  /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(PB12_START_SW_PIN_Pin);
-  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
-
-  /* USER CODE END EXTI15_10_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

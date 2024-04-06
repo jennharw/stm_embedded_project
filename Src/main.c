@@ -31,6 +31,8 @@
 #include "bitmap.h"
 #include "horse_anim.h"
 #include "g_var.h"
+#include "oledController.h"
+#include "buttonController.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,7 +42,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+//static uint16_t m_adc_value;
+//static float m_voltage;
+static uint16_t m_data[1];
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -133,58 +137,68 @@ int main(void)
 
   SSD1306_Init();  // initialise
 
-  SSD1306_GotoXY (0,0);
-  SSD1306_Puts ("HELLO", &Font_11x18, 1);
-  SSD1306_GotoXY (10, 30);
-  SSD1306_Puts ("  WORLD :)", &Font_11x18, 1);
-  SSD1306_UpdateScreen(); //display
+//  SSD1306_GotoXY (0,0);
+//  SSD1306_Puts ("HELLO", &Font_11x18, 1);
+//  SSD1306_GotoXY (10, 30);
+//  SSD1306_Puts ("  WORLD :)", &Font_11x18, 1);
+//  SSD1306_UpdateScreen(); //display
+//
+//  SSD1306_Clear();
+//  SSD1306_DrawBitmap(0,0,horse1,128,64,1);
+//  SSD1306_UpdateScreen();
+//  SSD1306_Clear();
+//  SSD1306_DrawBitmap(0,0,horse2,128,64,1);
+//  SSD1306_UpdateScreen();
+//  SSD1306_Clear();
+//  SSD1306_DrawBitmap(0,0,horse3,128,64,1);
+//  SSD1306_UpdateScreen();
+//  SSD1306_Clear();
+//  SSD1306_DrawBitmap(0,0,horse4,128,64,1);
+//  SSD1306_UpdateScreen();
+//
+//  HAL_Delay (2000);
+//  SSD1306_InvertDisplay(1);  // invert the display
+  opening();
 
-  SSD1306_Clear();
-  SSD1306_DrawBitmap(0,0,horse1,128,64,1);
-  SSD1306_UpdateScreen();
-  SSD1306_Clear();
-  SSD1306_DrawBitmap(0,0,horse2,128,64,1);
-  SSD1306_UpdateScreen();
-  SSD1306_Clear();
-  SSD1306_DrawBitmap(0,0,horse3,128,64,1);
-  SSD1306_UpdateScreen();
-  SSD1306_Clear();
-  SSD1306_DrawBitmap(0,0,horse4,128,64,1);
-  SSD1306_UpdateScreen();
+  //HAL_ADC_Start(&hadc1);
 
-  HAL_Delay (2000);
-  SSD1306_InvertDisplay(1);  // invert the display
-
-  HAL_ADC_Start(&hadc1);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)m_data, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   //char sendData[20] = "hello world\r\n";
   //int i = 0;
+  static int m_count = 0;
+  static int m_first = 0;
   while (1)
   {
+	  //DMA
+	  //HAL_ADC_PollForConversion(&hadc1, Timeout);
+	  //m_abc_value = HAL_ADC_GetValue(&hadc1);
+	  //m_voltage = (float)m_abc_value * 3.3f / 4095.0f;
+	  //m_voltage = (float)m_data[0] * 3.3f / 4095.0f;
 
 
-
-	  if(g_f_sw_up){
-		  printf("push g_f_sw_up\r\n");
-		  g_f_sw_up=0;
-	  }
-	  if(g_f_sw_down){
-		  printf("push g_f_sw_down\r\n");
-		  g_f_sw_down=0;
-	  }
-
-	  if(g_f_sw_fix){
-		  printf("push g_f_sw_fix\r\n");
-		  g_f_sw_fix=0;
-		  //HAL_GPIO_TogglePin(PB5_RELAY_ON_OFF_CTRL_GPIO_Port, PB5_RELAY_ON_OFF_CTRL_Pin);
-	  }
-	  if(g_f_sw_on){
-		  printf("push g_f_sw_on\r\n");
-		  g_f_sw_on=0;
-	  }
+//	  if(g_f_sw_up){
+//		  printf("push g_f_sw_up\r\n");
+//		  g_f_sw_up=0;
+//	  }
+//	  if(g_f_sw_down){
+//		  printf("push g_f_sw_down\r\n");
+//		  g_f_sw_down=0;
+//	  }
+//
+//	  if(g_f_sw_fix){
+//		  printf("push g_f_sw_fix\r\n");
+//		  g_f_sw_fix=0;
+//		  //HAL_GPIO_TogglePin(PB5_RELAY_ON_OFF_CTRL_GPIO_Port, PB5_RELAY_ON_OFF_CTRL_Pin);
+//	  }
+//	  if(g_f_sw_on){
+//		  printf("push g_f_sw_on\r\n");
+//		  g_f_sw_on=0;
+//	  }
+	  checkButton();
 
 
 //	  if(!HAL_GPIO_ReadPin(PB0_TEMP_SET_UP_GPIO_Port, PB0_TEMP_SET_UP_Pin)){
@@ -194,14 +208,29 @@ int main(void)
 //	  }
 	  //HAL_I2C_Master_Transmit(hi2c, DevAddress, pData, Size, Timeout);
 
-	  if(!isConverting()){
-		  StartConverting();
+	  if((m_count > 100) || !m_first){
+		  if(!isConverting()){
+			  StartConverting();
+		  }
+		  checkConverting();
+		  if(!isConverting()){
+			  temper = getTemper();
+
+			  if(geSWState() == ON_t){
+				  heaterControl(temper);
+			  } else {
+				  if(getHeaterState() == ON_t){
+					  heaterOnOff(OFF_t);
+				  }
+			  }
+
+			  m_count = 0;
+			  m_first = 1;
+		  }
 	  }
-	  checkConverting();
-	  if(!isConverting()){
-		  temper = getTemper();
-	  }
-	  HAL_Delay(1000);
+	  m_count++;
+	  HAL_Delay(10);
+
 
 	  //Ds18b20_ManualConvert();
 
@@ -625,11 +654,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(PA3_TEMP_DATA_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0_TEMP_SET_UP_Pin PB1_TEMP_SET_FIX_Pin PB2_TEMP_SET_DOWN_Pin PB12_START_SW_PIN_Pin */
-  GPIO_InitStruct.Pin = PB0_TEMP_SET_UP_Pin|PB1_TEMP_SET_FIX_Pin|PB2_TEMP_SET_DOWN_Pin|PB12_START_SW_PIN_Pin;
+  /*Configure GPIO pins : PB0_TEMP_SET_UP_Pin PB1_TEMP_SET_FIX_Pin PB2_TEMP_SET_DOWN_Pin */
+  GPIO_InitStruct.Pin = PB0_TEMP_SET_UP_Pin|PB1_TEMP_SET_FIX_Pin|PB2_TEMP_SET_DOWN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB12_START_SW_PIN_Pin */
+  GPIO_InitStruct.Pin = PB12_START_SW_PIN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(PB12_START_SW_PIN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : FND_RCLK_Pin PB7_LED2_Pin */
   GPIO_InitStruct.Pin = FND_RCLK_Pin|PB7_LED2_Pin;
@@ -661,9 +696,6 @@ static void MX_GPIO_Init(void)
 
   HAL_NVIC_SetPriority(EXTI2_IRQn, 9, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 9, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
